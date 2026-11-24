@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Evaluación en Línea</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body, html {
+            height: 100%;
+            background: #f0f4f8;
+            overscroll-behavior: none;
+        }
+
+        /* VISTA INICIO */
+        #vista-inicio {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100dvh;
+            padding: 1.2rem;
+        }
+        .card {
+            background: white;
+            padding: 2rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+        }
+        .card h2 {
+            color: #0f172a;
+            margin-bottom: 0.6rem;
+            font-size: 1.45rem;
+        }
+        .card p {
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 1.2rem;
+            font-size: 0.95rem;
+        }
+        .advertencia {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .advertencia ul {
+            margin-left: 1.2rem;
+            margin-top: 0.4rem;
+        }
+        .btn-principal {
+            background: #03787c;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            font-size: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-principal:hover {
+            background: #025f62;
+        }
+        .btn-principal:active {
+            transform: scale(0.98);
+        }
+
+        /* VISTA EXAMEN */
+        #vista-examen {
+            display: none;
+            height: 100dvh;
+            flex-direction: column;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .barra-superior {
+            background: #b91c1c;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+        .estado-vigilancia {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .punto-vivo {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulso 1.5s infinite;
+        }
+        @keyframes pulso {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+        }
+        .reloj {
+            background: rgba(0, 0, 0, 0.35);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-variant-numeric: tabular-nums;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        .reloj-alerta {
+            background: #facc15;
+            color: #713f12;
+            animation: parpadeo 1s infinite;
+        }
+        @keyframes parpadeo {
+            50% { opacity: 0.65; }
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            border: none;
+        }
+
+        /* VISTA BLOQUEADA */
+        #vista-bloqueada {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            min-height: 100dvh;
+            padding: 1.5rem;
+            background: #7f1d1d;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+        .contenedor-bloqueo {
+            max-width: 420px;
+            width: 100%;
+        }
+        .btn-candado {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        #panel-docente {
+            display: none;
+            margin-top: 1.2rem;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        #panel-docente input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .grupo-botones-docente {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .btn-continuar {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-reiniciar {
+            background: #d97706;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- PANTALLA 1: INSTRUCCIONES -->
+    <div id="vista-inicio">
+        <div class="card">
+            <h2>Evaluación en Línea</h2>
+            <p>Dispones de <strong>50 minutos</strong> continuos para responder y enviar tu formulario.</p>
+            <div class="advertencia">
+                <strong>⚠️ Reglas de la evaluación (Celular y PC):</strong>
+                <ul>
+                    <li>Puedes recargar la página si es necesario; el reloj conservará tu tiempo.</li>
+                    <li>No cambies de pestaña ni minimices el navegador o la aplicación.</li>
+                    <li>Usa únicamente el teclado y el ratón/pantalla táctil dentro de la evaluación.</li>
+                </ul>
+            </div>
+            <button class="btn-principal" onclick="iniciarExamen()">Comenzar Examen</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: EXAMEN ACTIVO -->
+    <div id="vista-examen">
+        <div class="barra-superior">
+            <div class="estado-vigilancia">
+                <span class="punto-vivo"></span>
+                <span>No cambies de pestaña ni minimices</span>
+            </div>
+            <span id="temporizador" class="reloj">⏱️ 50:00</span>
+        </div>
+        <iframe
+            id="formulario"
+            src=""
+            referrerpolicy="no-referrer-when-downgrade"
+            allow="fullscreen"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <!-- PANTALLA 3: BLOQUEO -->
+    <div id="vista-bloqueada">
+        <div class="contenedor-bloqueo">
+            <h1 id="titulo-bloqueo" style="font-size: 1.8rem; margin-bottom: 0.8rem;">🚫 Examen Bloqueado</h1>
+            <p id="mensaje-bloqueo" style="font-size: 1.05rem; line-height: 1.5; color: #fecaca;">
+                Se detectó un cambio de pestaña o minimización de la ventana.
+            </p>
+
+            <div id="panel-docente">
+                <p style="font-size: 0.85rem; margin-bottom: 8px; color: #fca5a5; font-weight: 600;">Panel de Control Docente</p>
+                <input
+                    type="password"
+                    id="input-clave"
+                    placeholder="Clave docente"
+                    onkeyup="if(event.key==='Enter') verificarClaveDocente(false)"
+                >
+                <div class="grupo-botones-docente">
+                    <button class="btn-continuar" onclick="verificarClaveDocente(false)">Desbloquear y Continuar</button>
+                    <button class="btn-reiniciar" onclick="verificarClaveDocente(true)">Reiniciar Tiempo (50 min)</button>
+                </div>
+                <p id="error-clave" style="color: #fde047; font-size: 0.82rem; margin-top: 8px; display: none;">Clave incorrecta</p>
+            </div>
+        </div>
+        <button class="btn-candado" onclick="mostrarPanelDocente()" title="Acceso docente">🔒</button>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN ---
+        const URL_MICROSOFT_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=3RjZjTR5W0Sor4egqONTUBmym1K3gotKn0ObxQAxw7ZUQjgyWkhTTVVXOUtISFFWSTBPV0lTUjJWVS4u&embed=true";
+        const MINUTOS_LIMITE = 50;
+        const HASH_CLAVE_DOCENTE = "UFJPRkUyMDI2"; // Base64 de "PROFE2026"
+        const ID_EXAMEN = "ms_examen_control_v4";
+
+        const CLAVE_BLOQUEO = ID_EXAMEN + "_bloqueado";
+        const CLAVE_FIN = ID_EXAMEN + "_tiempo_fin";
+        const CLAVE_EN_CURSO = ID_EXAMEN + "_en_curso";
+
+        let vigilanciaActiva = false;
+        let intervaloReloj = null;
+
+        // Bloquear apertura de nuevas ventanas desde scripts de la página
+        window.open = function() {
+            return null;
+        };
+
+        function mostrarPantallaBloqueo(motivo) {
+            vigilanciaActiva = false;
+            clearInterval(intervaloReloj);
+            document.getElementById("formulario").src = "about:blank";
+            document.getElementById("vista-inicio").style.display = "none";
+            document.getElementById("vista-examen").style.display = "none";
+            document.getElementById("vista-bloqueada").style.display = "flex";
+
+            const titulo = document.getElementById("titulo-bloqueo");
+            const mensaje = document.getElementById("mensaje-bloqueo");
+
+            if (motivo === "tiempo") {
+                titulo.textContent = "⌛ Tiempo Agotado";
+                mensaje.textContent = "Se cumplieron los 50 minutos límite de la evaluación.";
+            } else {
+                titulo.textContent = "🚫 Examen Bloqueado";
+                mensaje.textContent = "Se detectó cambio de pestaña, minimización o salida de la ventana.";
+            }
+        }
+
+        function mostrarPanelDocente() {
+            const panel = document.getElementById("panel-docente");
+            panel.style.display = panel.style.display === "block" ? "none" : "block";
+            if (panel.style.display === "block") {
+                document.getElementById("input-clave").focus();
+            }
+        }
+
+        function verificarClaveDocente(reiniciarTiempo) {
+            const ingresada = document.getElementById("input-clave").value.trim();
+            const errorEl = document.getElementById("error-clave");
+
+            if (btoa(ingresada) === HASH_CLAVE_DOCENTE) {
+                errorEl.style.display = "none";
+                document.getElementById("input-clave").value = "";
+                document.getElementById("panel-docente").style.display = "none";
+                document.getElementById("vista-bloqueada").style.display = "none";
+
+                localStorage.removeItem(CLAVE_BLOQUEO);
+
+                const tiempoGuardado = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
+                if (reiniciarTiempo || !tiempoGuardado || tiempoGuardado <= Date.now()) {
+                    localStorage.removeItem(CLAVE_FIN);
+                }
+
+                iniciarExamen();
+            } else {
+                errorEl.style.display = "block";
+            }
+        }
+
+        function bloquearExamen(motivo) {
+            localStorage.removeItem(CLAVE_EN_CURSO);
+            localStorage.setItem(CLAVE_BLOQUEO, motivo);
+            mostrarPantallaBloqueo(motivo);
+        }
+
+        function iniciarTemporizador() {
+            clearInterval(intervaloReloj);
+            let tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
+
+            if (!tiempoFin) {
+                tiempoFin = Date.now() + (MINUTOS_LIMITE * 60 * 1000);
+                localStorage.setItem(CLAVE_FIN, String(tiempoFin));
+            }
+
+            const relojEl = document.getElementById("temporizador");
+
+            function actualizarReloj() {
+                const restanteMs = tiempoFin - Date.now();
+
+                if (restanteMs <= 0) {
+                    relojEl.textContent = "⏱️ 00:00";
+                    bloquearExamen("tiempo");
+                    return;
+                }
+
+                const totalSegundos = Math.floor(restanteMs / 1000);
+                const minutos = Math.floor(totalSegundos / 60);
+                const segundos = totalSegundos % 60;
+
+                relojEl.textContent = `⏱️ ${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+
+                if (minutos < 5) {
+                    relojEl.classList.add("reloj-alerta");
+                } else {
+                    relojEl.classList.remove("reloj-alerta");
+                }
+            }
+
+            actualizarReloj();
+            intervaloReloj = setInterval(actualizarReloj, 1000);
+        }
+
+        function iniciarExamen() {
+            localStorage.setItem(CLAVE_EN_CURSO, "true");
+            document.getElementById("vista-inicio").style.display = "none";
+            document.getElementById("vista-bloqueada").style.display = "none";
+            document.getElementById("vista-examen").style.display = "flex";
+            document.getElementById("formulario").src = URL_MICROSOFT_FORM;
+
+            iniciarTemporizador();
+
+            setTimeout(() => {
+                vigilanciaActiva = true;
+            }, 2500);
+        }
+
+        // Al cargar o recargar la página: permite recargar si el examen estaba en curso
+        window.addEventListener("DOMContentLoaded", () => {
+            const bloqueo = localStorage.getItem(CLAVE_BLOQUEO);
+            const tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
+            const enCurso = localStorage.getItem(CLAVE_EN_CURSO) === "true";
+
+            if (bloqueo) {
+                mostrarPantallaBloqueo(bloqueo);
+                return;
+            }
+
+            if (tiempoFin > 0 && Date.now() >= tiempoFin) {
+                bloquearExamen("tiempo");
+                return;
+            }
+
+            if (enCurso) {
+                iniciarExamen();
+            }
+        });
+
+        // Detectar cambio de pestaña o minimización en PC y celulares
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && vigilanciaActiva) {
+                bloquearExamen("infraccion");
+            }
+        });
+
+        // Bloquear atajos de inspección/desarrollador permitiendo teclas normales y recarga
+        document.addEventListener("keydown", (e) => {
+            if (
+                e.key === "F12" ||
+                (e.ctrlKey && e.shiftKey && ["I", "i", "J", "j", "C", "c"].includes(e.key)) ||
+                (e.ctrlKey && ["u", "U", "s", "S"].includes(e.key))
+            ) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
