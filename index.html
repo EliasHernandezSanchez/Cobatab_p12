@@ -218,6 +218,11 @@
         <div class="card">
             <h2>Evaluación en Línea</h2>
             <p>Dispones de <strong>50 minutos</strong> continuos para responder y enviar tus respuestas.</p>
+
+            
+            
+            
+            
             <div class="advertencia">
                 <strong>⚠️ Reglas estrictas (Celular y PC):</strong>
                 <ul>
@@ -268,7 +273,7 @@
                 >
                 <div class="grupo-botones-docente">
                     <button class="btn-continuar" onclick="verificarClaveDocente(false)">Desbloquear y Continuar</button>
-                    <button class="btn-reiniciar" onclick="verificarClaveDocente(true)">Reiniciar Tiempo (50 min)</button>
+                    <button class="btn-reiniciar" onclick="verificarClaveDocente(true)">Reiniciar Tiempo</button>
                 </div>
                 <p id="error-clave" style="color: #fde047; font-size: 0.82rem; margin-top: 8px; display: none;">Clave incorrecta</p>
             </div>
@@ -279,6 +284,7 @@
     <script>
         // --- CONFIGURACIÓN ---
         // Asegúrate de configurar el formulario en Microsoft Forms como "Cualquier persona puede responder"
+       
         const URL_MICROSOFT_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=3RjZjTR5W0Sor4egqONTUBmym1K3gotKn0ObxQAxw7ZUQjgyWkhTTVVXOUtISFFWSTBPV0lTUjJWVS4u&embed=true";
         
         
@@ -288,6 +294,12 @@
         
         
         const MINUTOS_LIMITE = 50;
+
+
+
+
+        
+        
         const HASH_CLAVE_DOCENTE = "UFJPRkUyMDI2"; // Base64 de "PROFE2026"
         const ID_EXAMEN = "ms_examen_sin_login_v1";
 
@@ -324,7 +336,7 @@
 
             if (motivo === "tiempo") {
                 titulo.textContent = "⌛ Tiempo Agotado";
-                mensaje.textContent = "Se cumplieron los 50 minutos límite de la evaluación.";
+                mensaje.textContent = "Se cumplio el tiempo límite de la evaluación.";
             } else {
                 titulo.textContent = "🚫 Examen Bloqueado";
                 mensaje.textContent = "Se detectó un cambio de pestaña, minimización, cambio de aplicación o salida de la ventana.";
