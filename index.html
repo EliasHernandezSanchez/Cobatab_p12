@@ -219,11 +219,11 @@
             <h2>Evaluación en Línea</h2>
             <p>Dispones de <strong>50 minutos</strong> continuos para responder y enviar tu formulario.</p>
             <div class="advertencia">
-                <strong>⚠️ Reglas de la evaluación (Celular y PC):</strong>
+                <strong>⚠️ Reglas estrictas (Celular y PC):</strong>
                 <ul>
-                    <li>Puedes recargar la página si es necesario; el reloj conservará tu tiempo.</li>
-                    <li>No cambies de pestaña ni minimices el navegador o la aplicación.</li>
-                    <li>Usa únicamente el teclado y el ratón/pantalla táctil dentro de la evaluación.</li>
+                    <li>No cambies de pestaña, no abras otras ventanas ni cambies a otra aplicación.</li>
+                    <li>No minimices el navegador ni intentes cerrar la evaluación antes de enviar.</li>
+                    <li>Usa únicamente teclado y ratón/pantalla táctil en esta página.</li>
                 </ul>
             </div>
             <button class="btn-principal" onclick="iniciarExamen()">Comenzar Examen</button>
@@ -235,7 +235,7 @@
         <div class="barra-superior">
             <div class="estado-vigilancia">
                 <span class="punto-vivo"></span>
-                <span>No cambies de pestaña ni minimices</span>
+                <span>No cambies de app, pestaña ni minimices</span>
             </div>
             <span id="temporizador" class="reloj">⏱️ 50:00</span>
         </div>
@@ -253,7 +253,7 @@
         <div class="contenedor-bloqueo">
             <h1 id="titulo-bloqueo" style="font-size: 1.8rem; margin-bottom: 0.8rem;">🚫 Examen Bloqueado</h1>
             <p id="mensaje-bloqueo" style="font-size: 1.05rem; line-height: 1.5; color: #fecaca;">
-                Se detectó un cambio de pestaña o minimización de la ventana.
+                Se detectó un cambio de pestaña, minimización, cambio de aplicación o salida de la ventana.
             </p>
 
             <div id="panel-docente">
@@ -276,10 +276,11 @@
 
     <script>
         // --- CONFIGURACIÓN ---
+        // Asegúrate de configurar el formulario en Microsoft Forms como "Cualquier persona puede responder"
         const URL_MICROSOFT_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=3RjZjTR5W0Sor4egqONTUBmym1K3gotKn0ObxQAxw7ZUQjgyWkhTTVVXOUtISFFWSTBPV0lTUjJWVS4u&embed=true";
         const MINUTOS_LIMITE = 50;
         const HASH_CLAVE_DOCENTE = "UFJPRkUyMDI2"; // Base64 de "PROFE2026"
-        const ID_EXAMEN = "ms_examen_control_v4";
+        const ID_EXAMEN = "ms_examen_sin_login_v1";
 
         const CLAVE_BLOQUEO = ID_EXAMEN + "_bloqueado";
         const CLAVE_FIN = ID_EXAMEN + "_tiempo_fin";
@@ -288,10 +289,18 @@
         let vigilanciaActiva = false;
         let intervaloReloj = null;
 
-        // Bloquear apertura de nuevas ventanas desde scripts de la página
+        // Bloquear apertura de nuevas ventanas o pestañas por script
         window.open = function() {
             return null;
         };
+
+        // Evitar que enlaces con target="_blank" abran otra pestaña o ventana
+        document.addEventListener("click", (e) => {
+            const enlace = e.target.closest("a[target='_blank']");
+            if (enlace) {
+                enlace.setAttribute("target", "_self");
+            }
+        }, true);
 
         function mostrarPantallaBloqueo(motivo) {
             vigilanciaActiva = false;
@@ -309,7 +318,7 @@
                 mensaje.textContent = "Se cumplieron los 50 minutos límite de la evaluación.";
             } else {
                 titulo.textContent = "🚫 Examen Bloqueado";
-                mensaje.textContent = "Se detectó cambio de pestaña, minimización o salida de la ventana.";
+                mensaje.textContent = "Se detectó un cambio de pestaña, minimización, cambio de aplicación o salida de la ventana.";
             }
         }
 
@@ -388,6 +397,13 @@
         }
 
         function iniciarExamen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+
             localStorage.setItem(CLAVE_EN_CURSO, "true");
             document.getElementById("vista-inicio").style.display = "none";
             document.getElementById("vista-bloqueada").style.display = "none";
@@ -401,7 +417,7 @@
             }, 2500);
         }
 
-        // Al cargar o recargar la página: permite recargar si el examen estaba en curso
+        // Al cargar o recargar la página: permite recargar conservando el tiempo si estaba en curso
         window.addEventListener("DOMContentLoaded", () => {
             const bloqueo = localStorage.getItem(CLAVE_BLOQUEO);
             const tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
@@ -422,14 +438,27 @@
             }
         });
 
-        // Detectar cambio de pestaña o minimización en PC y celulares
+        // Cambio de pestaña, minimizar o cambiar a otra aplicación (PC y celular)
         document.addEventListener("visibilitychange", () => {
             if (document.hidden && vigilanciaActiva) {
                 bloquearExamen("infraccion");
             }
         });
 
-        // Bloquear atajos de inspección/desarrollador permitiendo teclas normales y recarga
+        // Cambio de ventana/aplicación o descarga de página
+        window.addEventListener("blur", () => {
+            if (vigilanciaActiva && document.activeElement !== document.getElementById("formulario")) {
+                bloquearExamen("infraccion");
+            }
+        });
+
+        window.addEventListener("pagehide", () => {
+            if (vigilanciaActiva) {
+                bloquearExamen("infraccion");
+            }
+        });
+
+        // Bloquear atajos de inspección/guardado conservando teclado normal y recarga
         document.addEventListener("keydown", (e) => {
             if (
                 e.key === "F12" ||
