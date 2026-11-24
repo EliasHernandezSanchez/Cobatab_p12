@@ -12,7 +12,7 @@
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         body, html {
-            min-height: 100dvh;
+            height: 100%;
             background: #f0f4f8;
             overscroll-behavior: none;
         }
@@ -79,6 +79,66 @@
             transform: scale(0.98);
         }
 
+        /* VISTA EXAMEN */
+        #vista-examen {
+            display: none;
+            height: 100dvh;
+            flex-direction: column;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .barra-superior {
+            background: #b91c1c;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+        .estado-vigilancia {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .punto-vivo {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulso 1.5s infinite;
+        }
+        @keyframes pulso {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+        }
+        .reloj {
+            background: rgba(0, 0, 0, 0.35);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-variant-numeric: tabular-nums;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        .reloj-alerta {
+            background: #facc15;
+            color: #713f12;
+            animation: parpadeo 1s infinite;
+        }
+        @keyframes parpadeo {
+            50% { opacity: 0.65; }
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            border: none;
+        }
+
         /* VISTA BLOQUEADA */
         #vista-bloqueada {
             display: none;
@@ -94,16 +154,6 @@
         .contenedor-bloqueo {
             max-width: 420px;
             width: 100%;
-        }
-        .reloj-bloqueo {
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.35);
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-variant-numeric: tabular-nums;
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
         }
         .btn-candado {
             position: fixed;
@@ -171,22 +221,39 @@
             <div class="advertencia">
                 <strong>⚠️ Reglas de la evaluación (Celular y PC):</strong>
                 <ul>
-                    <li>Al iniciar, se abrirá el formulario en esta misma pestaña para iniciar sesión sin bloqueos.</li>
-                    <li>El temporizador corre durante <strong>50 minutos</strong> desde el inicio.</li>
-                    <li>Si regresas a esta página antes de terminar, se requerirá clave docente.</li>
+                    <li>Puedes recargar la página si es necesario; el reloj conservará tu tiempo.</li>
+                    <li>No cambies de pestaña ni minimices el navegador o la aplicación.</li>
+                    <li>Usa únicamente el teclado y el ratón/pantalla táctil dentro de la evaluación.</li>
                 </ul>
             </div>
             <button class="btn-principal" onclick="iniciarExamen()">Comenzar Examen</button>
         </div>
     </div>
 
-    <!-- PANTALLA 2: BLOQUEO / ESTADO -->
+    <!-- PANTALLA 2: EXAMEN ACTIVO -->
+    <div id="vista-examen">
+        <div class="barra-superior">
+            <div class="estado-vigilancia">
+                <span class="punto-vivo"></span>
+                <span>No cambies de pestaña ni minimices</span>
+            </div>
+            <span id="temporizador" class="reloj">⏱️ 50:00</span>
+        </div>
+        <iframe
+            id="formulario"
+            src=""
+            referrerpolicy="no-referrer-when-downgrade"
+            allow="fullscreen"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <!-- PANTALLA 3: BLOQUEO -->
     <div id="vista-bloqueada">
         <div class="contenedor-bloqueo">
-            <div id="reloj-estado" class="reloj-bloqueo">⏱️ 00:00</div>
-            <h1 id="titulo-bloqueo" style="font-size: 1.8rem; margin-bottom: 0.8rem;">🚫 Acceso Restringido</h1>
+            <h1 id="titulo-bloqueo" style="font-size: 1.8rem; margin-bottom: 0.8rem;">🚫 Examen Bloqueado</h1>
             <p id="mensaje-bloqueo" style="font-size: 1.05rem; line-height: 1.5; color: #fecaca;">
-                Se detectó un regreso o interrupción durante la evaluación.
+                Se detectó un cambio de pestaña o minimización de la ventana.
             </p>
 
             <div id="panel-docente">
@@ -198,8 +265,8 @@
                     onkeyup="if(event.key==='Enter') verificarClaveDocente(false)"
                 >
                 <div class="grupo-botones-docente">
-                    <button class="btn-continuar" onclick="verificarClaveDocente(false)">Desbloquear y Abrir Examen</button>
-                    <button class="btn-reiniciar" onclick="verificarClaveDocente(true)">Reiniciar Tiempo (50 min) y Abrir</button>
+                    <button class="btn-continuar" onclick="verificarClaveDocente(false)">Desbloquear y Continuar</button>
+                    <button class="btn-reiniciar" onclick="verificarClaveDocente(true)">Reiniciar Tiempo (50 min)</button>
                 </div>
                 <p id="error-clave" style="color: #fde047; font-size: 0.82rem; margin-top: 8px; display: none;">Clave incorrecta</p>
             </div>
@@ -209,52 +276,31 @@
 
     <script>
         // --- CONFIGURACIÓN ---
-        const URL_MICROSOFT_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=3RjZjTR5W0Sor4egqONTUBmym1K3gotKn0ObxQAxw7ZUQjgyWkhTTVVXOUtISFFWSTBPV0lTUjJWVS4u";
+        const URL_MICROSOFT_FORM = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=3RjZjTR5W0Sor4egqONTUBmym1K3gotKn0ObxQAxw7ZUQjgyWkhTTVVXOUtISFFWSTBPV0lTUjJWVS4u&embed=true";
         const MINUTOS_LIMITE = 50;
         const HASH_CLAVE_DOCENTE = "UFJPRkUyMDI2"; // Base64 de "PROFE2026"
-        const ID_EXAMEN = "ms_examen_github_v1";
+        const ID_EXAMEN = "ms_examen_control_v4";
 
         const CLAVE_BLOQUEO = ID_EXAMEN + "_bloqueado";
         const CLAVE_FIN = ID_EXAMEN + "_tiempo_fin";
         const CLAVE_EN_CURSO = ID_EXAMEN + "_en_curso";
 
+        let vigilanciaActiva = false;
         let intervaloReloj = null;
 
-        function formatearTiempoRestante(tiempoFinMs) {
-            const restanteMs = Math.max(0, tiempoFinMs - Date.now());
-            const totalSegundos = Math.floor(restanteMs / 1000);
-            const minutos = Math.floor(totalSegundos / 60);
-            const segundos = totalSegundos % 60;
-            return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
-        }
+        // Bloquear apertura de nuevas ventanas desde scripts de la página
+        window.open = function() {
+            return null;
+        };
 
-        function iniciarRelojPantallaBloqueo() {
+        function mostrarPantallaBloqueo(motivo) {
+            vigilanciaActiva = false;
             clearInterval(intervaloReloj);
-            const relojEl = document.getElementById("reloj-estado");
+            document.getElementById("formulario").src = "about:blank";
+            document.getElementById("vista-inicio").style.display = "none";
+            document.getElementById("vista-examen").style.display = "none";
+            document.getElementById("vista-bloqueada").style.display = "flex";
 
-            function actualizar() {
-                const tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
-                if (!tiempoFin) {
-                    relojEl.textContent = "⏱️ 50:00";
-                    return;
-                }
-
-                const restanteMs = tiempoFin - Date.now();
-                relojEl.textContent = `⏱️ ${formatearTiempoRestante(tiempoFin)}`;
-
-                if (restanteMs <= 0) {
-                    localStorage.removeItem(CLAVE_EN_CURSO);
-                    localStorage.setItem(CLAVE_BLOQUEO, "tiempo");
-                    actualizarTextosBloqueo("tiempo");
-                    clearInterval(intervaloReloj);
-                }
-            }
-
-            actualizar();
-            intervaloReloj = setInterval(actualizar, 1000);
-        }
-
-        function actualizarTextosBloqueo(motivo) {
             const titulo = document.getElementById("titulo-bloqueo");
             const mensaje = document.getElementById("mensaje-bloqueo");
 
@@ -262,39 +308,8 @@
                 titulo.textContent = "⌛ Tiempo Agotado";
                 mensaje.textContent = "Se cumplieron los 50 minutos límite de la evaluación.";
             } else {
-                titulo.textContent = "🚫 Sesión Interrumpida";
-                mensaje.textContent = "La evaluación ya había iniciado. Solicita autorización al docente para continuar o reiniciar.";
-            }
-        }
-
-        function mostrarPantallaBloqueo(motivo) {
-            document.getElementById("vista-inicio").style.display = "none";
-            document.getElementById("vista-bloqueada").style.display = "flex";
-            actualizarTextosBloqueo(motivo);
-            iniciarRelojPantallaBloqueo();
-        }
-
-        function evaluarEstadoAlCargar() {
-            const tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
-            const bloqueoGuardado = localStorage.getItem(CLAVE_BLOQUEO);
-            const enCurso = localStorage.getItem(CLAVE_EN_CURSO) === "true";
-
-            if (tiempoFin > 0 && Date.now() >= tiempoFin) {
-                localStorage.removeItem(CLAVE_EN_CURSO);
-                localStorage.setItem(CLAVE_BLOQUEO, "tiempo");
-                mostrarPantallaBloqueo("tiempo");
-                return;
-            }
-
-            if (bloqueoGuardado) {
-                mostrarPantallaBloqueo(bloqueoGuardado);
-                return;
-            }
-
-            if (enCurso) {
-                localStorage.removeItem(CLAVE_EN_CURSO);
-                localStorage.setItem(CLAVE_BLOQUEO, "regreso");
-                mostrarPantallaBloqueo("regreso");
+                titulo.textContent = "🚫 Examen Bloqueado";
+                mensaje.textContent = "Se detectó cambio de pestaña, minimización o salida de la ventana.";
             }
         }
 
@@ -314,11 +329,12 @@
                 errorEl.style.display = "none";
                 document.getElementById("input-clave").value = "";
                 document.getElementById("panel-docente").style.display = "none";
+                document.getElementById("vista-bloqueada").style.display = "none";
 
                 localStorage.removeItem(CLAVE_BLOQUEO);
 
-                const tiempoActualFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
-                if (reiniciarTiempo || !tiempoActualFin || tiempoActualFin <= Date.now()) {
+                const tiempoGuardado = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
+                if (reiniciarTiempo || !tiempoGuardado || tiempoGuardado <= Date.now()) {
                     localStorage.removeItem(CLAVE_FIN);
                 }
 
@@ -328,22 +344,101 @@
             }
         }
 
-        function iniciarExamen() {
+        function bloquearExamen(motivo) {
+            localStorage.removeItem(CLAVE_EN_CURSO);
+            localStorage.setItem(CLAVE_BLOQUEO, motivo);
+            mostrarPantallaBloqueo(motivo);
+        }
+
+        function iniciarTemporizador() {
+            clearInterval(intervaloReloj);
             let tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
 
-            if (!tiempoFin || tiempoFin <= Date.now()) {
+            if (!tiempoFin) {
                 tiempoFin = Date.now() + (MINUTOS_LIMITE * 60 * 1000);
                 localStorage.setItem(CLAVE_FIN, String(tiempoFin));
             }
 
-            localStorage.removeItem(CLAVE_BLOQUEO);
-            localStorage.setItem(CLAVE_EN_CURSO, "true");
+            const relojEl = document.getElementById("temporizador");
 
-            window.location.href = URL_MICROSOFT_FORM;
+            function actualizarReloj() {
+                const restanteMs = tiempoFin - Date.now();
+
+                if (restanteMs <= 0) {
+                    relojEl.textContent = "⏱️ 00:00";
+                    bloquearExamen("tiempo");
+                    return;
+                }
+
+                const totalSegundos = Math.floor(restanteMs / 1000);
+                const minutos = Math.floor(totalSegundos / 60);
+                const segundos = totalSegundos % 60;
+
+                relojEl.textContent = `⏱️ ${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+
+                if (minutos < 5) {
+                    relojEl.classList.add("reloj-alerta");
+                } else {
+                    relojEl.classList.remove("reloj-alerta");
+                }
+            }
+
+            actualizarReloj();
+            intervaloReloj = setInterval(actualizarReloj, 1000);
         }
 
-        window.addEventListener("DOMContentLoaded", evaluarEstadoAlCargar);
-        window.addEventListener("pageshow", evaluarEstadoAlCargar);
+        function iniciarExamen() {
+            localStorage.setItem(CLAVE_EN_CURSO, "true");
+            document.getElementById("vista-inicio").style.display = "none";
+            document.getElementById("vista-bloqueada").style.display = "none";
+            document.getElementById("vista-examen").style.display = "flex";
+            document.getElementById("formulario").src = URL_MICROSOFT_FORM;
+
+            iniciarTemporizador();
+
+            setTimeout(() => {
+                vigilanciaActiva = true;
+            }, 2500);
+        }
+
+        // Al cargar o recargar la página: permite recargar si el examen estaba en curso
+        window.addEventListener("DOMContentLoaded", () => {
+            const bloqueo = localStorage.getItem(CLAVE_BLOQUEO);
+            const tiempoFin = parseInt(localStorage.getItem(CLAVE_FIN) || "0", 10);
+            const enCurso = localStorage.getItem(CLAVE_EN_CURSO) === "true";
+
+            if (bloqueo) {
+                mostrarPantallaBloqueo(bloqueo);
+                return;
+            }
+
+            if (tiempoFin > 0 && Date.now() >= tiempoFin) {
+                bloquearExamen("tiempo");
+                return;
+            }
+
+            if (enCurso) {
+                iniciarExamen();
+            }
+        });
+
+        // Detectar cambio de pestaña o minimización en PC y celulares
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && vigilanciaActiva) {
+                bloquearExamen("infraccion");
+            }
+        });
+
+        // Bloquear atajos de inspección/desarrollador permitiendo teclas normales y recarga
+        document.addEventListener("keydown", (e) => {
+            if (
+                e.key === "F12" ||
+                (e.ctrlKey && e.shiftKey && ["I", "i", "J", "j", "C", "c"].includes(e.key)) ||
+                (e.ctrlKey && ["u", "U", "s", "S"].includes(e.key))
+            ) {
+                e.preventDefault();
+            }
+        });
     </script>
 </body>
 </html>
